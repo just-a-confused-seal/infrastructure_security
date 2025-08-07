@@ -61,18 +61,8 @@ Once download is done, you can check by entering this command again:
 REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
 ubuntu       plucky    92598a7a70c7   3 weeks ago   77MB
 ```
-Let's create the container(Think about image is the raw material and container is the product of that raw material):
-```
-~# sudo docker container create --name vuln_server ubuntu:plucky
-181068c012e9d47531cf7a8f45ae2bcc09d9c502826956c2d8aa623d1f82f469
-```
-Again the result might not be the same as yours and you can check if the container is created:
-```
-~# sudo docker container ls -all
-CONTAINER ID   IMAGE           COMMAND       CREATED          STATUS    PORTS     NAMES
-181068c012e9   ubuntu:plucky   "/bin/bash"   20 seconds ago   Created             vuln_server
-```
-Now that the container is ready, its time to run it:
+Let's create the container(Think about image is the raw material and container is the product of that raw material).
+Now that the container is ready, its time to start it:
 ```
 ~# sudo docker run -it ubuntu:plucky /bin/bash   
 root@7b6c74e6fd4d:/# 
@@ -81,4 +71,192 @@ The container in a very minimalistic environment, we need to do some installatio
 ```
 root@7b6c74e6fd4d:/# apt update
 root@7b6c74e6fd4d:/# apt install net-tools
+root@7b6c74e6fd4d:/# apt install nano
 ```
+Once installation complete, we can use the standard linux network cli, like:
+```
+root@7b6c74e6fd4d:/# netstat -aptn
+root@7b6c74e6fd4d:/# ifconfig
+```
+So on and so forth. Now lets try to install apache(web server) into our docker for testing, put the following command:
+```
+root@7b6c74e6fd4d:/# apt install apache2 
+```
+Once its done, lets start the service:
+```
+root@7b6c74e6fd4d:/# service apache2 start
+```
+We can check if the HTTP port open using the command:
+```
+root@3f55c4081b93:/# netstat -aptn
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      3573/apache2      
+```
+Let's visit the web server via browser from kali linux. As you can see it will run!
+Note: you can only visit the ubuntu instance because you are the host, if you want other user to visit the same apache page. You have to run the docker using -p parameter so it mapped to host port.
+
+Now that we have a very minimalistic ubuntu server to play with, lets do network scanning and enumeration using nmap from kali linux.
+```
+~# nmap 172.17.0.2             
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-07 11:03 EDT
+Nmap scan report for 172.17.0.2 (172.17.0.2)
+Host is up (0.0000070s latency).
+Not shown: 999 closed tcp ports (reset)
+PORT   STATE SERVICE
+80/tcp open  http
+MAC Address: 02:42:AC:11:00:02 (Unknown)
+
+Nmap done: 1 IP address (1 host up) scanned in 0.38 seconds
+
+~# nmap -A 172.17.0.2
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-07 11:03 EDT
+Nmap scan report for 172.17.0.2 (172.17.0.2)
+Host is up (0.00013s latency).
+Not shown: 999 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.63 ((Ubuntu))
+|_http-title: Apache2 Ubuntu Default Page: It works
+|_http-server-header: Apache/2.4.63 (Ubuntu)
+MAC Address: 02:42:AC:11:00:02 (Unknown)
+Device type: general purpose|router
+Running: Linux 4.X|5.X, MikroTik RouterOS 7.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5 cpe:/o:mikrotik:routeros:7 cpe:/o:linux:linux_kernel:5.6.3
+OS details: Linux 4.15 - 5.19, OpenWrt 21.02 (Linux 5.4), MikroTik RouterOS 7.2 - 7.5 (Linux 5.6.3)
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.12 ms 172.17.0.2 (172.17.0.2)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 8.43 seconds
+
+
+```
+As you can see using nmap we can get information regarding the open port and the software running in the port. 
+Let's right now switch side as the operation team, can we make this little harder for attacker? for example can we hide banner, so attacker don't know what software running in the http port.
+Let's go to the apache2.conf file to put some hardening, like this:
+```
+root@3f55c4081b93:~# cd /etc/apache2
+root@3f55c4081b93:/etc/apache2# ls
+apache2.conf  conf-available  conf-enabled  envvars  magic  mods-available  mods-enabled  ports.conf  sites-available  sites-enabled
+```
+Open the file using nano, like this:
+```
+root@3f55c4081b93:/etc/apache2# nano apache2.conf
+```
+Go to the end of file using your arrow key and add the following configuration:
+```
+ServerTokens Prod
+ServerSignature Off
+```
+Don't forget to save it with ctrl+o and ctrl+x to exit the nano. Finally restart apache server like this:
+```
+root@3f55c4081b93:/etc/apache2# service apache2 restart
+```
+Once it got up again , try to scan it using nmap:
+```
+~# nmap -A 172.17.0.2 -p 80
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-07 11:13 EDT
+Nmap scan report for 172.17.0.2 (172.17.0.2)
+Host is up (0.00015s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd
+|_http-title: Apache2 Ubuntu Default Page: It works
+|_http-server-header: Apache
+MAC Address: 02:42:AC:11:00:02 (Unknown)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose|router
+Running: Linux 4.X|5.X, MikroTik RouterOS 7.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5 cpe:/o:mikrotik:routeros:7 cpe:/o:linux:linux_kernel:5.6.3
+OS details: Linux 4.15 - 5.19, OpenWrt 21.02 (Linux 5.4), MikroTik RouterOS 7.2 - 7.5 (Linux 5.6.3)
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.15 ms 172.17.0.2 (172.17.0.2)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 8.01 seconds
+
+```
+As you can see the server version is gone. Now let's move on into something more interesting. Lets setup a vulnerable FTP server, in this case we will be using vsftpd.
+```
+~# apt install vsftpd
+```
+If the installation asking you about country and location just pick any area you like!
+
+Next is to create ftp user for you to access:
+```
+root@3f55c4081b93:/etc/apache2/conf-available# useradd -m ftpuser
+root@3f55c4081b93:/etc/apache2/conf-available# passwd ftpuser
+```
+Use any password that you like. Next is to create the following folder:
+
+```
+root@3f55c4081b93:~# mkdir -p /var/ftp/share
+```
+Finally open the vsftpd.conf using nano:
+```
+root@3f55c4081b93:~# nano /etc/vsftpd.conf
+```
+Add the following changes:
+```
+anonymous_enable=YES
+local_enable=YES
+```
+Finally you can start the vsftpd:
+```
+root@3f55c4081b93:~# service vsftpd start
+ * Starting FTP server vsftpd                                                                                                          [ OK ] 
+root@3f55c4081b93:~# netstat -aptn
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      4157/apache2        
+tcp6       0      0 :::21                   :::*                    LISTEN      5091/vsftpd         
+```
+
+Now you can nmap the port and see what the nmap pick up:
+```
+~# nmap 172.17.0.2 -p 21 -A    
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-07 11:49 EDT
+Nmap scan report for 172.17.0.2 (172.17.0.2)
+Host is up (0.00015s latency).
+
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.5
+|_ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:172.17.0.1
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.5 - secure, fast, stable
+|_End of status
+MAC Address: 02:42:AC:11:00:02 (Unknown)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose|router
+Running: Linux 4.X|5.X, MikroTik RouterOS 7.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5 cpe:/o:mikrotik:routeros:7 cpe:/o:linux:linux_kernel:5.6.3
+OS details: Linux 4.15 - 5.19, OpenWrt 21.02 (Linux 5.4), MikroTik RouterOS 7.2 - 7.5 (Linux 5.6.3)
+Network Distance: 1 hop
+Service Info: OS: Unix
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.15 ms 172.17.0.2 (172.17.0.2)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 4.46 seconds
+```
+### Exercise - 1 (20 points)
+Now do you know how to build a vulnerable FTP server, I want you to do hardening on the FTP server. Create a report on how to harden the configuration and make sure try to do research on serveral way to this task. Internet is your friend! 
+
