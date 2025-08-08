@@ -19,7 +19,7 @@ Then container came along! it has the same approach as VM but it does not requir
 To install docker, open terminal and use the following command:
 ```
 ~# sudo apt install docker.io
-
+~# sudo apt install docker-compose
 ```
 Once the installation complete, you can check if the docker is installed correctly:
 ```
