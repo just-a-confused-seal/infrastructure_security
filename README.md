@@ -10,8 +10,10 @@ I will try to cover every possible material relating to this concept but now my 
 ⚠️ This material is for educational and authorized testing only. Exploiting systems without permission is illegal.
 
 ## To do list
-[] Make lab writeup for Nuclei phpmyadmin misconfiguration
+[X] Make lab writeup for Nuclei phpmyadmin misconfiguration
 
 [] Make lab writeup for DNS Zone transfer
 
 [] Make lab writeup for metasploit CVE 2025-32433 and CVE 2021-32682
+
+[] Make lab to write Nuclei template
