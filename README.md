@@ -12,6 +12,12 @@ I will try to cover every possible material relating to this concept but now my 
 ## To do list
 [X] Make lab writeup for Nuclei phpmyadmin misconfiguration
 
+[] Add detail on how to attach to running docker
+
+[] Make lab writeup for hardening phpmyadmin misconfiguration
+
+[] Make lab writeup for hardening EMQX default password
+
 [] Make lab writeup for DNS Zone transfer
 
 [] Make lab writeup for metasploit CVE 2025-32433 and CVE 2021-32682
