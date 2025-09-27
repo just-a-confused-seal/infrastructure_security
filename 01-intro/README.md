@@ -257,6 +257,27 @@ HOP RTT     ADDRESS
 OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 4.46 seconds
 ```
+### Notes
+Several docker command that can be useful:
+
+For example, if you want to restart your ubuntu docker that has been exited, like this:
+```
+~# sudo docker container ps -a  
+CONTAINER ID   IMAGE                  COMMAND       CREATED             STATUS                          PORTS                                       NAMES
+428fce953623   ubuntu:plucky          "/bin/bash"   About an hour ago   Exited (0) About a minute ago                                               eloquent_lamport
+
+```
+You can do the following command, first is to start the docker again by providing the container id as in this case it would be 428fce953623:
+```
+~# sudo docker container start 428fce953623
+```
+Once it starts you can attach to the docker again, using the following command:
+```
+~# sudo docker attach 428fce953623 
+root@428fce953623:/# ls
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+```
+
 ### Exercise - 1 (20 points)
 Now do you know how to build a vulnerable FTP server, I want you to do hardening on the FTP server. Create a report on how to harden the configuration and make sure try to do research on serveral way to this task. Internet is your friend! 
 
