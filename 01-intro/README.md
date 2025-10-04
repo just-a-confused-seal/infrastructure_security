@@ -260,7 +260,7 @@ Nmap done: 1 IP address (1 host up) scanned in 4.46 seconds
 ### Notes
 Several docker command that can be useful:
 
-For example, if you want to restart your ubuntu docker that has been exited, like this:
+1. For example, if you want to restart your ubuntu docker that has been exited, like this:
 ```
 ~# sudo docker container ps -a  
 CONTAINER ID   IMAGE                  COMMAND       CREATED             STATUS                          PORTS                                       NAMES
@@ -277,6 +277,19 @@ Once it starts you can attach to the docker again, using the following command:
 root@428fce953623:/# ls
 bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
 ```
+2. After this you will doing a lot of setup in docker and it may cause your memory storage, thus, we recommend you to periodically prune the docker. This means to remove all of the cache, docker image and container.
+```
+~# sudo docker system prune
+WARNING! This will remove:
+  - all stopped containers
+  - all networks not used by at least one container
+  - all dangling images
+  - unused build cache
+
+Are you sure you want to continue? [y/N] y
+
+```
+This will remove all the mentioned items in your docker.
 
 ### Exercise - 1 (20 points)
 Now do you know how to build a vulnerable FTP server, I want you to do hardening on the FTP server. Create a report on how to harden the configuration and make sure try to do research on serveral way to this task. Internet is your friend! 
